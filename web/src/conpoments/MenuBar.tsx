@@ -1,0 +1,77 @@
+import { Add, Info, PageviewOutlined, Refresh, Sort } from "@mui/icons-material";
+import { AppBar, Toolbar, Typography } from "@mui/material";
+import { ReactComponent as Logo } from '../logo.svg';
+
+import { useState } from "react";
+import InfoModal from "./InfoModal";
+import CreateTodoItemModal from "./CreateTodoItemModal";
+import { CreationArgs, FilterArgs, SortByArgs } from "../types/Types";
+import SortByModal from "./SortByModal";
+import ShowPageModal from "./ShowPageModal";
+import ClickableIconButton from "./ClickableIconButton";
+
+export default function MenuBar(
+    { onCreateToDoItem, onSelectSortBy, onSelectShowPage, onClickRefresh }: {
+        onCreateToDoItem: (args: CreationArgs) => void,
+        onSelectSortBy: (sortBy: SortByArgs | null) => void
+        onSelectShowPage: (page: number, limit: number, filterArgs: FilterArgs | null) => void
+        onClickRefresh: () => void
+    }
+) {
+    const [openInfo, setOpenInfo] = useState(false);
+    const [openCreate, setOpenCreate] = useState(false);
+    const [openSortBy, setOpenSortBy] = useState(false);
+    const [openShowPage, setOpenShowPage] = useState(false);
+
+    return (
+        <AppBar data-testid="menu-bar" position="static">
+            <Toolbar>
+                <Logo />
+                <Typography variant="h5" component="p" >
+                    Todo List
+                </Typography>
+
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }} />
+
+                <ClickableIconButton onClickAction={() => setOpenShowPage(true)}>
+                    <PageviewOutlined />
+                </ClickableIconButton>
+
+                <ClickableIconButton onClickAction={() => setOpenSortBy(true)}>
+                    <Sort />
+                </ClickableIconButton>
+
+                <ClickableIconButton data-testid="refresh-btn" onClickAction={() => onClickRefresh()}>
+                    <Refresh />
+                </ClickableIconButton>
+
+                <ClickableIconButton onClickAction={() => setOpenCreate(true)}>
+                    <Add />
+                </ClickableIconButton>
+
+                <ClickableIconButton onClickAction={() => setOpenInfo(true)}>
+                    <Info />
+                </ClickableIconButton>
+            </Toolbar>
+
+            <InfoModal
+                open={openInfo}
+                setOpen={setOpenInfo}
+            />
+            <CreateTodoItemModal
+                open={openCreate}
+                setOpen={setOpenCreate}
+                onCreate={onCreateToDoItem} />
+            <SortByModal
+                open={openSortBy}
+                setOpen={setOpenSortBy}
+                onSelectSortBy={onSelectSortBy}
+            />
+            <ShowPageModal
+                open={openShowPage}
+                setOpen={setOpenShowPage}
+                onSelectShowPage={onSelectShowPage}
+            />
+        </AppBar>
+    )
+}
