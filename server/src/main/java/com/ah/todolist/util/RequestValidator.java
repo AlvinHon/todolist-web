@@ -64,8 +64,14 @@ public class RequestValidator {
                 "Invalid sort direction. Must be non-empty value. Use 'asc' or 'desc'.");
         String sortBy = validateStringInput(sortParams.sortBy(),
                 "Invalid sort by field. Must be non-empty value.");
+        Sort.Direction sortDirection;
+        try {
+            sortDirection = Sort.Direction.fromString(direction);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction. Must be 'asc' or 'desc'.");
+        }
 
-        return Sort.by(Sort.Direction.fromString(direction), sortBy);
+        return Sort.by(sortDirection, sortBy);
     }
 
     public static Optional<FilterParams> validateFilterParams(FilterParams filterParams)

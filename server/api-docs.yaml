@@ -1,0 +1,276 @@
+openapi: 3.0.1
+info:
+  title: Todo List API Backend
+  description: Todo list API backend that provides CRUD operations for todo items.
+servers:
+- url: http: //localhost:8080
+  description: Generated server url
+paths:
+  /update:
+    post:
+      tags:
+      - http-controller
+      summary: Update a todo item
+      operationId: handleUpdateRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRequest"
+        required: true
+      responses: "200":
+          description: The todo item is updated successfully.
+          content:
+            '* /*':
+              schema:
+                $ref: "#/components/schemas/UpdateResponse"
+        "400":
+          description: Failed to update the todo item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionResponse"
+  /read:
+    post:
+      tags:
+      - http-controller
+      summary: Read todo items based on the given criteria
+      operationId: handleReadRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadRequest"
+        required: true
+      responses:
+        "400":
+          description: Failed to read the todo items.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionResponse"
+        "200":
+          description: The todo items are read successfully.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReadResponse"
+  /delete:
+    post:
+      tags:
+      - http-controller
+      summary: Delete a todo item
+      operationId: handleDeleteRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteRequest"
+        required: true
+      responses: "400":
+          description: Failed to delete the todo item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionResponse""200":
+          description: The todo item is deleted successfully.
+          content:
+            '* /*':
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+  /create:
+    post:
+      tags:
+      - http-controller
+      summary: Create a new todo item
+      operationId: handleCreateRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequest"
+        required: true
+      responses:
+        "400":
+          description: Failed to create the todo item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExceptionResponse"
+        "200":
+          description: The todo item is created successfully.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CreateResponse"
+  /index:
+    get:
+      tags:
+      - http-controller
+      operationId: index
+      responses: "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+components:
+  schemas:
+    UpdateRequest:
+      required:
+      - id
+      - name
+      - status
+      type: object
+      properties:
+        id:
+          type: string
+          description: The UUID of the item to be updated.
+          format: uuid
+        name:
+          minLength: 1
+          type: string
+          description: The name of the item.
+        description:
+          type: string
+          description: The description of the item.
+        dueDate:
+          type: integer
+          description: The due date in seconds (Unix Timestamp) for the item. This
+            field absent means no due date.
+          format: int64
+        status:
+          type: string
+          description: The status of the item.
+          enum:
+          - NotStarted
+          - InProgress
+          - Completed
+    ExceptionResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      description: The response body of the exception. It is used in exception handling
+        for all handlers.
+    UpdateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The UUID of the updated item.
+          format: uuid
+    FilterParams:
+      type: object
+      properties:
+        byDueDate:
+          type: integer
+          format: int64
+        byStatus:
+          type: string
+          enum:
+          - NotStarted
+          - InProgress
+          - Completed
+      description: Filter the results with due data <= value and/or by status==value.
+        Must specify at least one criteria.
+    PaginationParams:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        limit:
+          type: integer
+          format: int32
+      description: "Read results at a offset with limit. If not provided, the default\
+        \ values are used."
+      default: "page: 0, limit: 10"
+    ReadRequest:
+      type: object
+      properties:
+        pagination:
+          $ref: "#/components/schemas/PaginationParams"
+        sort:
+          $ref: "#/components/schemas/SortParams"
+        filter:
+          $ref: "#/components/schemas/FilterParams"
+    SortParams:
+      type: object
+      properties:
+        sortBy:
+          type: string
+        direction:
+          type: string
+      description: "Sort the results by value (id, name, description, status, dueDate)\
+        \ in an order ('asc' or 'desc'). If not provided, the default values are used."
+      default: "sortBy: id, direction: asc"
+    ReadResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReadTodoItem"
+    ReadTodoItem:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The UUID of the item.
+          format: uuid
+        name:
+          type: string
+          description: The name of the item.
+        description:
+          type: string
+          description: The description of the item.
+        dueDate:
+          type: integer
+          description: The due date in seconds (Unix Timestamp) for the item. This
+            field absent means no due date.
+          format: int64
+        status:
+          type: string
+          description: The status of the item.
+          enum:
+          - NotStarted
+          - InProgress
+          - Completed
+      description: The todo item.
+    DeleteRequest:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          type: string
+          description: The UUID of the item to be deleted.
+          format: uuid
+    DeleteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The UUID of the deleted item.
+          format: uuid
+    CreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the item to be created.
+        description:
+          type: string
+          description: The description of the item to be created.
+        dueDate:
+          type: integer
+          description: The due date in seconds (Unix Timestamp) for the item.
+          format: int64
+    CreateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The UUID of the created item.
+          format: uuid
