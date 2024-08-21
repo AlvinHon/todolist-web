@@ -7,14 +7,13 @@ import MenuBar from './conpoments/MenuBar';
 import Footer from './conpoments/Footer';
 import TodoItem from './models/TodoItem';
 import TodoItemList from './conpoments/TodoItemList';
-import { CreationArgs, FilterArgs, SortByArgs } from './types/Types';
-import CreateRequest from './services/requests/CreateRequest';
+import { FilterArgs, SortByArgs } from './types/Types';
 import ReadRequest from './services/requests/ReadRequest';
 import FilterParams from './services/params/FilterParams';
 import EditTodoItemMenuBar from './conpoments/EditTodoItemMenuBar';
 import EditTodoItemForm from './conpoments/EditTodoItemForm';
 import { useSnackbar } from 'notistack';
-import { useStompClient, useSubscription } from 'react-stomp-hooks';
+import { useSubscription } from 'react-stomp-hooks';
 import { randomString } from './utils/Random';
 
 export const AppClientName = randomString(10);
@@ -42,7 +41,6 @@ function App() {
   const [refreshRequest, setRefreshRequest] = useState<ReadRequest>({});
 
   const { enqueueSnackbar } = useSnackbar();
-  const stompClient = useStompClient();
 
   useEffect(() => {
     if (mode !== AppMode.INIT && mode !== AppMode.LIST) return;
@@ -81,16 +79,6 @@ function App() {
     });
   }
 
-  const createTodoItem = (args: CreationArgs) => {
-    setIsLoading(true);
-    API.create(new CreateRequest(args))
-      .then(() => {
-        enqueueSnackbar("Created '" + args.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
-        stompClient?.publish(Feeds.Create.makeActivityMessage({ clientName: AppClientName, todoItemName: args.name }));
-      })
-      .finally(() => { refreshTodoItems(refreshRequest) });
-  }
-
   const selectSortBy = (args: SortByArgs | null) => {
     setRefreshRequest({ ...refreshRequest, sort: args ? args : undefined });
   }
@@ -123,7 +111,7 @@ function App() {
         {mode === AppMode.LIST && (
           <Container sx={{ flex: 1 }}>
             <MenuBar
-              onCreateToDoItem={createTodoItem}
+              onCreated={() => { refreshTodoItems(refreshRequest) }}
               onSelectSortBy={selectSortBy}
               onSelectShowPage={selectShowPage}
               onClickRefresh={() => { refreshTodoItems(refreshRequest) }}

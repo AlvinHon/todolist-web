@@ -6,7 +6,6 @@ import App from "../App";
 import TodoItem from "../models/TodoItem";
 import TodoItemStatus from "../models/TodoItemStatus";
 
-
 // afterEach function runs after each test suite is executed
 afterEach(() => {
   cleanup(); // Resets the DOM after each test suite

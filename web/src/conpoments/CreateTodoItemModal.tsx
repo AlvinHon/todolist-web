@@ -1,6 +1,6 @@
 import { Box, Divider, Modal, Typography } from "@mui/material";
 import CreateTodoItemForm from "./CreateTodoItemForm";
-import { Dispatch, CreationArgs } from "../types/Types";
+import { Dispatch } from "../types/Types";
 
 const style = {
     position: 'absolute',
@@ -18,7 +18,7 @@ const style = {
 };
 
 export default function CreateTodoItemModal(
-    { open, setOpen, onCreate }: { open: boolean, setOpen: Dispatch<boolean>, onCreate: (args: CreationArgs) => void }
+    { open, setOpen, onCreated }: { open: boolean, setOpen: Dispatch<boolean>, onCreated: () => void }
 ) {
     return (
         <Modal
@@ -32,9 +32,9 @@ export default function CreateTodoItemModal(
                     Create a new task
                 </Typography>
                 <Divider sx={{ mt: 2, mb: 2 }} />
-                <CreateTodoItemForm onCreate={(args) => {
+                <CreateTodoItemForm onCreated={() => {
                     setOpen(false);
-                    onCreate(args);
+                    onCreated();
                 }} />
             </Box>
         </Modal>

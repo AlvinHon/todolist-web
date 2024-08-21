@@ -6,20 +6,42 @@ import { DateTimePicker } from "@mui/x-date-pickers";
 import { validStringOrUndefined } from "../types/TypeConvertion";
 import { CreationArgs } from "../types/Types";
 import { useState } from "react";
+import { useSnackbar } from "notistack";
+import { useStompClient } from "react-stomp-hooks";
+import { API, Feeds } from "../services/Api";
+import { AppClientName } from "../App";
+import CreateRequest from "../services/requests/CreateRequest";
+import ExceptionResponse from "../services/responses/ExceptionResponse";
 
 export default function CreateTodoItemForm(
-    { onCreate }: { onCreate: (args: CreationArgs) => void }
+    { onCreated }: { onCreated: () => void }
 ) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [dueDate, setDueDate] = useState<Dayjs | null>(null);
+
+    const { enqueueSnackbar } = useSnackbar();
+    const stompClient = useStompClient();
+
+
+    const createTodoItem = (args: CreationArgs) => {
+        API.create(new CreateRequest(args))
+            .then(() => {
+                enqueueSnackbar("Created '" + args.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
+                stompClient?.publish(Feeds.Create.makeActivityMessage({ clientName: AppClientName, todoItemName: args.name }));
+                onCreated()
+            })
+            .catch((exceptionResponse: ExceptionResponse) => {
+                enqueueSnackbar("Fail to create. Error: " + exceptionResponse.error, { variant: 'error' });
+            });
+    }
 
     return (
         <form onSubmit={(e) => {
             e.preventDefault();
             var desc = validStringOrUndefined(description);
             var date = dueDate?.toDate();
-            onCreate({
+            createTodoItem({
                 name,
                 description: desc,
                 dueDate: date

@@ -5,14 +5,14 @@ import { ReactComponent as Logo } from '../logo.svg';
 import { useState } from "react";
 import InfoModal from "./InfoModal";
 import CreateTodoItemModal from "./CreateTodoItemModal";
-import { CreationArgs, FilterArgs, SortByArgs } from "../types/Types";
+import { FilterArgs, SortByArgs } from "../types/Types";
 import SortByModal from "./SortByModal";
 import ShowPageModal from "./ShowPageModal";
 import ClickableIconButton from "./ClickableIconButton";
 
 export default function MenuBar(
-    { onCreateToDoItem, onSelectSortBy, onSelectShowPage, onClickRefresh }: {
-        onCreateToDoItem: (args: CreationArgs) => void,
+    { onCreated, onSelectSortBy, onSelectShowPage, onClickRefresh }: {
+        onCreated: () => void,
         onSelectSortBy: (sortBy: SortByArgs | null) => void
         onSelectShowPage: (page: number, limit: number, filterArgs: FilterArgs | null) => void
         onClickRefresh: () => void
@@ -61,7 +61,7 @@ export default function MenuBar(
             <CreateTodoItemModal
                 open={openCreate}
                 setOpen={setOpenCreate}
-                onCreate={onCreateToDoItem} />
+                onCreated={onCreated} />
             <SortByModal
                 open={openSortBy}
                 setOpen={setOpenSortBy}
