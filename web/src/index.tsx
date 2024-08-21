@@ -3,7 +3,6 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { SnackbarProvider } from 'notistack';
-import { StompSessionProvider } from 'react-stomp-hooks';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,11 +11,9 @@ const root = ReactDOM.createRoot(
 
 root.render(
   // <React.StrictMode>
-  <StompSessionProvider url={"ws://" + (process.env.BACKEND_URL ?? "localhost:8080") + "/backend-ws"}>
-    <SnackbarProvider maxSnack={5}>
-      <App />
-    </SnackbarProvider>
-  </StompSessionProvider>
+  <SnackbarProvider maxSnack={5}>
+    <App />
+  </SnackbarProvider>
   // </React.StrictMode>
 );
 

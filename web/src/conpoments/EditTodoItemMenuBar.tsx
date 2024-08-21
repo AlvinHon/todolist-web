@@ -4,8 +4,8 @@ import ClickableIconButton from "./ClickableIconButton"
 import { ArrowBack, Delete } from "@mui/icons-material"
 import { useSnackbar } from "notistack"
 import { API, Feeds } from "../services/Api"
-import { useStompClient } from "react-stomp-hooks"
 import { AppClientName } from "../App"
+import { getStompClient } from "../services/stomp/Client"
 
 
 export default function EditTodoItemMenuBar(
@@ -16,7 +16,7 @@ export default function EditTodoItemMenuBar(
 ) {
     const { enqueueSnackbar } = useSnackbar();
 
-    const stompClient = useStompClient();
+    const stompClient = getStompClient();
 
     const onDelete = () => {
         API.delete({ id: editingItem.id })

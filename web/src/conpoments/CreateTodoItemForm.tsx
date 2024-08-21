@@ -7,11 +7,11 @@ import { validStringOrUndefined } from "../types/TypeConvertion";
 import { CreationArgs } from "../types/Types";
 import { useState } from "react";
 import { useSnackbar } from "notistack";
-import { useStompClient } from "react-stomp-hooks";
 import { API, Feeds } from "../services/Api";
 import { AppClientName } from "../App";
 import CreateRequest from "../services/requests/CreateRequest";
 import ExceptionResponse from "../services/responses/ExceptionResponse";
+import { getStompClient } from "../services/stomp/Client";
 
 export default function CreateTodoItemForm(
     { onCreated }: { onCreated: () => void }
@@ -21,13 +21,13 @@ export default function CreateTodoItemForm(
     const [dueDate, setDueDate] = useState<Dayjs | null>(null);
 
     const { enqueueSnackbar } = useSnackbar();
-    const stompClient = useStompClient();
-
+    const stompClient = getStompClient();
 
     const createTodoItem = (args: CreationArgs) => {
         API.create(new CreateRequest(args))
             .then(() => {
                 enqueueSnackbar("Created '" + args.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
+                console.log("is stompclinets undefined? ", stompClient === undefined);
                 stompClient?.publish(Feeds.Create.makeActivityMessage({ clientName: AppClientName, todoItemName: args.name }));
                 onCreated()
             })

@@ -6,13 +6,13 @@ import App from "../App";
 import TodoItem from "../models/TodoItem";
 import TodoItemStatus from "../models/TodoItemStatus";
 
-// afterEach function runs after each test suite is executed
-afterEach(() => {
-  cleanup(); // Resets the DOM after each test suite
-})
+
+jest.mock('../services/stomp/Client', () => ({
+  getStompClient: jest.fn(),
+  initStompClient: jest.fn()
+}));
 
 test("App Rendering", async () => {
-
   mockResponse(new ReadResponse({ items: [] }));
   render(<App />);
 
@@ -39,9 +39,6 @@ test("App Rendering", async () => {
   expect(itemlistPaper).toBeInTheDocument();
 
 })
-
-
-
 
 const mockResponse = (response: any) => {
   (global as any).fetch = jest.fn(() =>

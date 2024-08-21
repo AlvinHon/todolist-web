@@ -13,8 +13,9 @@ import FilterParams from './services/params/FilterParams';
 import EditTodoItemMenuBar from './conpoments/EditTodoItemMenuBar';
 import EditTodoItemForm from './conpoments/EditTodoItemForm';
 import { useSnackbar } from 'notistack';
-import { useSubscription } from 'react-stomp-hooks';
+// import { useSubscription } from 'react-stomp-hooks';
 import { randomString } from './utils/Random';
+import { getStompClient, initStompClient } from './services/stomp/Client';
 
 export const AppClientName = randomString(10);
 
@@ -41,32 +42,46 @@ function App() {
   const [refreshRequest, setRefreshRequest] = useState<ReadRequest>({});
 
   const { enqueueSnackbar } = useSnackbar();
+  const [isStompClientConnected, setIsStompClientConnected] = useState(false);
+
+
+  useEffect(() => {
+    initStompClient(() => { setIsStompClientConnected(true) })
+  }, [])
 
   useEffect(() => {
     if (mode !== AppMode.INIT && mode !== AppMode.LIST) return;
     refreshTodoItems(refreshRequest);
   }, [refreshRequest, mode]);
 
-  useSubscription(Feeds.Create.subPath, (message) => {
-    if (mode !== AppMode.LIST) return;
-    const activity = Feeds.Create.parseActivityMessageBody(message.body);
-    if (activity.clientName === AppClientName) return;
-    enqueueSnackbar("Someone creates a new TODO item named '" + activity.todoItemName + "'");
-  });
+  useEffect(() => {
+    if (!isStompClientConnected) return;
+    const stompClient = getStompClient();
 
-  useSubscription(Feeds.Update.subPath, (message) => {
-    if (mode !== AppMode.LIST) return;
-    const activity = Feeds.Update.parseActivityMessageBody(message.body);
-    if (activity.clientName === AppClientName) return;
-    enqueueSnackbar("Someone updates the TODO item named '" + activity.todoItemName + "'");
-  });
+    stompClient?.subscribe(Feeds.Create.subPath, (message) => {
+      if (mode !== AppMode.LIST) return;
+      const activity = Feeds.Create.parseActivityMessageBody(message.body);
+      if (activity.clientName === AppClientName) return;
+      enqueueSnackbar("Someone creates a new TODO item named '" + activity.todoItemName + "'");
+    })
 
-  useSubscription(Feeds.Delete.subPath, (message) => {
-    if (mode !== AppMode.LIST) return;
-    const activity = Feeds.Delete.parseActivityMessageBody(message.body);
-    if (activity.clientName === AppClientName) return;
-    enqueueSnackbar("Someone deletes a item named '" + activity.todoItemName + "'");
-  });
+    stompClient?.subscribe(Feeds.Update.subPath, (message) => {
+      if (mode !== AppMode.LIST) return;
+      const activity = Feeds.Update.parseActivityMessageBody(message.body);
+      if (activity.clientName === AppClientName) return;
+      enqueueSnackbar("Someone updates the TODO item named '" + activity.todoItemName + "'");
+    });
+
+    stompClient?.subscribe(Feeds.Delete.subPath, (message) => {
+      if (mode !== AppMode.LIST) return;
+      const activity = Feeds.Delete.parseActivityMessageBody(message.body);
+      if (activity.clientName === AppClientName) return;
+      enqueueSnackbar("Someone deletes a item named '" + activity.todoItemName + "'");
+    });
+
+  }, [isStompClientConnected, mode, enqueueSnackbar])
+
+
 
 
   const refreshTodoItems = (request: ReadRequest) => {

@@ -11,9 +11,9 @@ import { Circle } from "@mui/icons-material";
 import { API, Feeds } from "../services/Api";
 import UpdateRequest from "../services/requests/UpdateRequest";
 import { useSnackbar } from "notistack";
-import { useStompClient } from "react-stomp-hooks";
 import { AppClientName } from "../App";
 import ExceptionResponse from "../services/responses/ExceptionResponse";
+import { getStompClient } from "../services/stomp/Client";
 
 
 export default function EditTodoItemForm(
@@ -27,7 +27,7 @@ export default function EditTodoItemForm(
     const [dueDate, setDueDate] = useState<Dayjs | null>(null);
     const [todoStatus, setTodoStatus] = useState(TodoItemStatus.NotStarted);
 
-    const stompClient = useStompClient();
+    const stompClient = getStompClient();
 
     useEffect(() => {
         setName(editingItem.name);
