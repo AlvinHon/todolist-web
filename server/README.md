@@ -10,7 +10,7 @@ The application supports `OpenAPI` specification with `SwaggerUI`. The associate
 - localhost:8080/api-docs
 - localhost:8080/swagger-ui/index.html
 
-A snapshot of `OpenAPI` docs (in JSON) can be found in [api-docs](./api-docs.yaml).
+A snapshot of `OpenAPI` docs can be found in [api-docs](./api-docs.yaml).
 
 ## Websocket
 
