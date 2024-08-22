@@ -15,15 +15,15 @@
     "http-proxy-middleware": "^3.0.0",
     "notistack": "^3.0.1",
     "react": "^18.3.1",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "todolist-web": "file:",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "typescript": "^3.2.1",
+    "web-vitals": "^4.2.3"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
-    "@types/jest": "^29.5.12"
+    "@types/jest": "^28.1.6"
   },
   "scripts": {
     "start": "react-scripts start",
