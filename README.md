@@ -24,7 +24,7 @@ An example web application that allows users to manage TODOs.
 The repository contains folders:
 - [server](./server/): the backend server implemented in `Spring Boot`, backed by `Jpa` with `mysql`.
 - [web](./web): the frontend web application implemented in `React`.
-- [proxy](./proxy/): contains a `docker` file for 
+- [proxy](./proxy/): contains a `docker` file for setting whole system.
 
 ## Architecture
 
