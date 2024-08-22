@@ -62,3 +62,5 @@ sequenceDiagram
 The web makes HTTP calls to backend server. The APIs reference can be found in [README.md](../server/README.md#http-apis).
 
 The web also connects the the backend server via a websocket. This is for sending and receiving real-time activity messages from other users.
+
+Please see [Design notes](../server/README.md#design-notes) for details.
