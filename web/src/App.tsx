@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 
 import { Backdrop, CircularProgress, Container, createTheme, CssBaseline, ThemeProvider } from '@mui/material';
-import { API, Feeds } from './services/Api';
+import { ActivityReceiver, API, Feeds } from './services/Api';
 import MenuBar from './conpoments/MenuBar';
 import Footer from './conpoments/Footer';
 import TodoItem from './models/TodoItem';
@@ -16,7 +16,12 @@ import { useSnackbar } from 'notistack';
 // import { useSubscription } from 'react-stomp-hooks';
 import { randomString } from './utils/Random';
 import { getStompClient, initStompClient } from './services/stomp/Client';
+import CreateTodoItemActivity from './services/activities/CreateTodoItemActivity';
+import UpdateTodoItemActivity from './services/activities/UpdateTodoItemActivity';
+import DeleteTodoItemActivity from './services/activities/DeleteTodoItemActivity';
+import ExceptionResponse from './services/responses/ExceptionResponse';
 
+// This is a random string to identify the client. It is used to filter out the client's own activities.
 export const AppClientName = randomString(10);
 
 const darkTheme = createTheme({
@@ -42,57 +47,70 @@ function App() {
   const [refreshRequest, setRefreshRequest] = useState<ReadRequest>({});
 
   const { enqueueSnackbar } = useSnackbar();
-  const [isStompClientConnected, setIsStompClientConnected] = useState(false);
 
-
+  // Setup the Stomp Client to subscribe to the feeds
+  const activityReceiver = useRef<ActivityReceiver>(ActivityReceiver.empty);
   useEffect(() => {
-    initStompClient(() => { setIsStompClientConnected(true) })
+    initStompClient(() => {
+
+      const stompClient = getStompClient();
+
+      stompClient?.subscribe(Feeds.Create.subPath, (message) => {
+        const activity = Feeds.Create.parseActivityMessageBody(message.body);
+        activityReceiver.current.onReceiveCreateActivity(activity);
+      })
+
+      stompClient?.subscribe(Feeds.Update.subPath, (message) => {
+        const activity = Feeds.Update.parseActivityMessageBody(message.body);
+        activityReceiver.current.onReceiveUpdateActivity(activity);
+      });
+
+      stompClient?.subscribe(Feeds.Delete.subPath, (message) => {
+        const activity = Feeds.Delete.parseActivityMessageBody(message.body);
+        activityReceiver.current.onReceiveDeleteActivity(activity);
+      });
+    })
   }, [])
 
+  // Setup handlers to show the activity messages
   useEffect(() => {
-    if (mode !== AppMode.INIT && mode !== AppMode.LIST) return;
-    refreshTodoItems(refreshRequest);
-  }, [refreshRequest, mode]);
+    const showMessage = (clientName: string, message: string) => {
+      // show only if current page is in list mode and the activity is not from the client itself
+      if (mode !== AppMode.LIST || clientName === AppClientName) return;
+      enqueueSnackbar(message);
+    }
+    activityReceiver.current = {
+      onReceiveCreateActivity: (activity: CreateTodoItemActivity) => {
+        showMessage(activity.clientName, "Someone creates a new TODO item named '" + activity.todoItemName + "'");
+      },
+      onReceiveUpdateActivity: (activity: UpdateTodoItemActivity) => {
+        showMessage(activity.clientName, "Someone updates the TODO item named '" + activity.todoItemName + "'");
+      },
+      onReceiveDeleteActivity: (activity: DeleteTodoItemActivity) => {
+        showMessage(activity.clientName, "Someone deletes a TODO item named '" + activity.todoItemName + "'");
+      }
+    };
+  }, [mode, enqueueSnackbar])
 
-  useEffect(() => {
-    if (!isStompClientConnected) return;
-    const stompClient = getStompClient();
-
-    stompClient?.subscribe(Feeds.Create.subPath, (message) => {
-      if (mode !== AppMode.LIST) return;
-      const activity = Feeds.Create.parseActivityMessageBody(message.body);
-      if (activity.clientName === AppClientName) return;
-      enqueueSnackbar("Someone creates a new TODO item named '" + activity.todoItemName + "'");
-    })
-
-    stompClient?.subscribe(Feeds.Update.subPath, (message) => {
-      if (mode !== AppMode.LIST) return;
-      const activity = Feeds.Update.parseActivityMessageBody(message.body);
-      if (activity.clientName === AppClientName) return;
-      enqueueSnackbar("Someone updates the TODO item named '" + activity.todoItemName + "'");
-    });
-
-    stompClient?.subscribe(Feeds.Delete.subPath, (message) => {
-      if (mode !== AppMode.LIST) return;
-      const activity = Feeds.Delete.parseActivityMessageBody(message.body);
-      if (activity.clientName === AppClientName) return;
-      enqueueSnackbar("Someone deletes a item named '" + activity.todoItemName + "'");
-    });
-
-  }, [isStompClientConnected, mode, enqueueSnackbar])
-
-
-
-
-  const refreshTodoItems = (request: ReadRequest) => {
+  // Refresh the todo items and set the mode to LIST
+  const refreshTodoItems = useCallback(() => {
     setIsLoading(true);
-    API.read(request).then((response) => {
+    API.read(refreshRequest).then((response) => {
       setTodoItems(response.items)
-      setIsLoading(false);
 
       setMode(AppMode.LIST);
-    });
-  }
+    })
+      .catch((exceptionResponse: ExceptionResponse) => {
+        enqueueSnackbar("Fail to read. Error: " + exceptionResponse.error, { variant: 'error' });
+      })
+      .finally(() => setIsLoading(false));
+  }, [refreshRequest, enqueueSnackbar]);
+
+  // Refresh the todo items when the mode is in INIT or LIST
+  useEffect(() => {
+    if (mode !== AppMode.INIT && mode !== AppMode.LIST) return;
+    refreshTodoItems();
+  }, [mode, refreshTodoItems]);
 
   const selectSortBy = (args: SortByArgs | null) => {
     setRefreshRequest({ ...refreshRequest, sort: args ? args : undefined });
@@ -126,10 +144,10 @@ function App() {
         {mode === AppMode.LIST && (
           <Container sx={{ flex: 1 }}>
             <MenuBar
-              onCreated={() => { refreshTodoItems(refreshRequest) }}
+              onCreated={() => { refreshTodoItems() }}
               onSelectSortBy={selectSortBy}
               onSelectShowPage={selectShowPage}
-              onClickRefresh={() => { refreshTodoItems(refreshRequest) }}
+              onClickRefresh={() => { refreshTodoItems() }}
             />
 
             <TodoItemList todoItems={todoItems} selectTodoItem={selectTodoItem} />

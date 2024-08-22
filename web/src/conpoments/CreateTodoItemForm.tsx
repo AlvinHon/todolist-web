@@ -20,20 +20,25 @@ export default function CreateTodoItemForm(
     const [description, setDescription] = useState('');
     const [dueDate, setDueDate] = useState<Dayjs | null>(null);
 
+    const [isBtnDisabled, setIsBtnDisabled] = useState(false);
+
     const { enqueueSnackbar } = useSnackbar();
     const stompClient = getStompClient();
 
     const createTodoItem = (args: CreationArgs) => {
+        setIsBtnDisabled(true);
         API.create(new CreateRequest(args))
             .then(() => {
                 enqueueSnackbar("Created '" + args.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
-                console.log("is stompclinets undefined? ", stompClient === undefined);
                 stompClient?.publish(Feeds.Create.makeActivityMessage({ clientName: AppClientName, todoItemName: args.name }));
                 onCreated()
             })
             .catch((exceptionResponse: ExceptionResponse) => {
                 enqueueSnackbar("Fail to create. Error: " + exceptionResponse.error, { variant: 'error' });
-            });
+            })
+            .finally(() => {
+                setIsBtnDisabled(false);
+            })
     }
 
     return (
@@ -76,6 +81,7 @@ export default function CreateTodoItemForm(
                 type="submit"
                 variant="contained"
                 fullWidth
+                disabled={isBtnDisabled}
             >
                 Create
             </Button>

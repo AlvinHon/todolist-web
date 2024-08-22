@@ -1,4 +1,4 @@
-import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 // Importing the jest testing library
 import '@testing-library/jest-dom'
 import ReadResponse from "../services/responses/ReadResponse";
@@ -14,7 +14,9 @@ jest.mock('../services/stomp/Client', () => ({
 
 test("App Rendering", async () => {
   mockResponse(new ReadResponse({ items: [] }));
-  render(<App />);
+  act(() => {
+    render(<App />);
+  })
 
   // Initially, the App should render the MenuBar
   const menubar = await screen.findByTestId("menu-bar");
@@ -33,7 +35,9 @@ test("App Rendering", async () => {
   expect(footer).toBeInTheDocument();
 
   mockResponse(new ReadResponse({ items: [new TodoItem({ id: '123456', name: 'taskname', status: TodoItemStatus.NotStarted })] }));
-  refreshBtn.click();
+  act(() => {
+    refreshBtn.click();
+  });
 
   const itemlistPaper = await screen.findByTestId("has-item-paper");
   expect(itemlistPaper).toBeInTheDocument();

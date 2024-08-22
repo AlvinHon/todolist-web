@@ -9,8 +9,6 @@
     "@mui/material": "^5.16.7",
     "@mui/x-date-pickers": "^7.13.0",
     "@stomp/stompjs": "^7.0.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "dayjs": "^1.11.12",
@@ -21,6 +19,11 @@
     "todolist-web": "file:",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@types/jest": "^29.5.12"
   },
   "scripts": {
     "start": "react-scripts start",

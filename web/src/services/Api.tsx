@@ -52,7 +52,9 @@ class API {
 }
 
 class Feed<T> {
+    // Path to subcribe to the stomp broker
     subPath: string;
+    // Path to publish to the stomp broker
     pubPath: string;
     fnNew: new (args: any) => T;
 
@@ -74,6 +76,7 @@ class Feed<T> {
     }
 }
 
+
 class Feeds {
     static Create = new Feed(CreateTodoItemActivity, "/feeds/create", "/activity/create");
     static Update = new Feed(UpdateTodoItemActivity, "/feeds/update", "/activity/update");
@@ -86,6 +89,20 @@ interface ActivityMessage {
     body: string;
 }
 
-export { API, Feeds };
+interface ActivityReceiver {
+    onReceiveCreateActivity: (activity: CreateTodoItemActivity) => void;
+    onReceiveUpdateActivity: (activity: UpdateTodoItemActivity) => void;
+    onReceiveDeleteActivity: (activity: DeleteTodoItemActivity) => void;
+}
+
+namespace ActivityReceiver {
+    export const empty = {
+        onReceiveCreateActivity: () => { },
+        onReceiveUpdateActivity: () => { },
+        onReceiveDeleteActivity: () => { }
+    }
+}
+
+export { API, Feeds, ActivityReceiver };
 
 export type { ActivityMessage };

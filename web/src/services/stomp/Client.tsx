@@ -1,16 +1,21 @@
 import { Client } from "@stomp/stompjs";
 
-const stompClients: Client[] = [];
+// Note:
+// This module defines a global variable to store the STOMP client instance.
+// Not a good way to implemenet. Ideally, we should use a context to store
+// the STOMP client instance.
+
+interface StompClientProps {
+    client: Client | undefined;
+}
+const stompClient: StompClientProps = { client: undefined };
 
 export function getStompClient(): Client | undefined {
-    if (stompClients.length === 0) {
-        return undefined;
-    }
-    return stompClients[0];
+    return stompClient.client;
 }
 
 export function initStompClient(onConnect: () => void) {
-    if (stompClients.length > 0) {
+    if (stompClient.client !== undefined) {
         return;
     }
     const client = new Client({
@@ -19,5 +24,5 @@ export function initStompClient(onConnect: () => void) {
     });
     client.activate();
 
-    stompClients.push(client);
+    stompClient.client = client;
 }
