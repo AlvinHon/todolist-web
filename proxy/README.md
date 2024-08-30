@@ -4,8 +4,8 @@ The following network architecture showing the components with their accessible 
 
 ```mermaid
 graph TD;
-      User-->Proxy[Proxy: 80];
-      Proxy-->Server[Server: 8080];
-      Proxy-->Web[Web: 3000];
-      Server-->DB[mysql: 3306];
+      WebBrowser[Web Browser]-->Proxy[Proxy: 80];
+      Proxy-->ApiServer[API Server: 8080];
+      Proxy-->WebServer[Web Server: 3000];
+      ApiServer-->DB[mysql: 3306];
 ```
