@@ -49,13 +49,6 @@ Message format in `/feeds/delete` and `/activity/delete`:
 
 For the usage, please check the frontend document [README.md](../web/README.md)
 
-### Design Notes
-
-There are few improvements to the existing design.
-- The server forwards websocket messages without validation, which could be a security concern.
-- The system relies on user to send activities to other users, but on the server to do the job, which could be a securty concern though it is for simpler and more flexibility.
-- Ideally the websocket server can be decoubled from the HTTP server. i.e. Having a separate broker to serve websocket endpoint.
-
 ## Build
 
 ```sh

@@ -19,7 +19,7 @@ export function initStompClient(onConnect: () => void) {
         return;
     }
     const client = new Client({
-        brokerURL: 'ws://' + (process.env.BACKEND_URL ?? 'localhost:8080') + '/backend-ws',
+        brokerURL: 'ws://' + (process.env.REACT_APP_BACKEND_URL ?? 'localhost:15674') + '/ws',
         onConnect
     });
     client.activate();

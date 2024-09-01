@@ -54,40 +54,25 @@ class API {
 class Feed<T> {
     // Path to subcribe to the stomp broker
     subPath: string;
-    // Path to publish to the stomp broker
-    pubPath: string;
     fnNew: new (args: any) => T;
 
-    constructor(fnNew: new (args: any) => T, subPath: string, pubPath: string) {
+    constructor(fnNew: new (args: any) => T, subPath: string) {
         this.subPath = subPath;
-        this.pubPath = pubPath;
         this.fnNew = fnNew;
     }
 
     public parseActivityMessageBody(body: string): T {
         return new this.fnNew(JSON.parse(body));
     }
-
-    public makeActivityMessage(data: T): ActivityMessage {
-        return {
-            destination: this.pubPath,
-            body: JSON.stringify(data)
-        }
-    }
 }
 
 
 class Feeds {
-    static Create = new Feed(CreateTodoItemActivity, "/feeds/create", "/activity/create");
-    static Update = new Feed(UpdateTodoItemActivity, "/feeds/update", "/activity/update");
-    static Delete = new Feed(DeleteTodoItemActivity, "/feeds/delete", "/activity/delete");
+    static Create = new Feed(CreateTodoItemActivity, "/topic/feeds-create");
+    static Update = new Feed(UpdateTodoItemActivity, "/topic/feeds-update");
+    static Delete = new Feed(DeleteTodoItemActivity, "/topic/feeds-delete");
 }
 
-
-interface ActivityMessage {
-    destination: string;
-    body: string;
-}
 
 interface ActivityReceiver {
     onReceiveCreateActivity: (activity: CreateTodoItemActivity) => void;
@@ -104,5 +89,3 @@ namespace ActivityReceiver {
 }
 
 export { API, Feeds, ActivityReceiver };
-
-export type { ActivityMessage };

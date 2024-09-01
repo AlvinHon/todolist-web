@@ -3,9 +3,7 @@ import TodoItem from "../models/TodoItem"
 import ClickableIconButton from "./ClickableIconButton"
 import { ArrowBack, Delete } from "@mui/icons-material"
 import { useSnackbar } from "notistack"
-import { API, Feeds } from "../services/Api"
-import { AppClientName } from "../App"
-import { getStompClient } from "../services/stomp/Client"
+import { API } from "../services/Api"
 
 
 export default function EditTodoItemMenuBar(
@@ -16,13 +14,10 @@ export default function EditTodoItemMenuBar(
 ) {
     const { enqueueSnackbar } = useSnackbar();
 
-    const stompClient = getStompClient();
-
     const onDelete = () => {
         API.delete({ id: editingItem.id })
             .then(() => {
                 enqueueSnackbar("Deleted '" + editingItem.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
-                stompClient?.publish(Feeds.Delete.makeActivityMessage({ clientName: AppClientName, todoItemName: editingItem.name }));
                 onClickBack();
             });
     }

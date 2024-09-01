@@ -5,7 +5,8 @@ The following network architecture showing the components with their accessible 
 ```mermaid
 graph TD;
       WebBrowser[Web Browser]-->Proxy[Proxy: 80];
-      Proxy-->ApiServer[API Server: 8080];
-      Proxy-->WebServer[Web Server: 3000];
+      Proxy-->|HTTP /api| ApiServer[API Server: 8080];
+      Proxy-->|HTTP /| WebServer[Web Server: 3000];
+      Proxy-->|WS /ws| RabbitMQ[RabbitMQ: 15674]
       ApiServer-->DB[mysql: 3306];
 ```

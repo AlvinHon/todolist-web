@@ -18,6 +18,7 @@ import com.ah.todolist.dto.http.ReadRequest;
 import com.ah.todolist.dto.http.ReadResponse;
 import com.ah.todolist.dto.http.UpdateRequest;
 import com.ah.todolist.dto.http.UpdateResponse;
+import com.ah.todolist.service.ActivityFeedsService;
 import com.ah.todolist.service.TodoListService;
 import com.ah.todolist.util.Converter;
 import com.ah.todolist.util.RequestValidator;
@@ -39,6 +40,9 @@ public class HTTPController {
     @Autowired
     private TodoListService todoListService;
 
+    @Autowired
+    private ActivityFeedsService activityFeedsService;
+
     // endpoint for testing server readiness.
     @GetMapping("/index")
     public String index() {
@@ -55,12 +59,16 @@ public class HTTPController {
     @PostMapping("/create")
     public CreateResponse handleCreateRequest(@RequestBody(required = true) CreateRequest createRequest)
             throws Exception {
-
         var name = RequestValidator.validateName(createRequest.name());
         var description = createRequest.description();
         var dueDate = RequestValidator.validateDueDate(createRequest.dueDate());
 
+        // create a new todo item
         UUID uuid = todoListService.create(name, description, dueDate);
+
+        // send activity feed
+        activityFeedsService.sendCreateTodoItemActivity(name);
+
         return new CreateResponse(uuid);
     }
 
@@ -85,6 +93,7 @@ public class HTTPController {
                 .stream()
                 .map(ReadResponse.ReadTodoItem::from)
                 .toList();
+
         return new ReadResponse(items);
     }
 
@@ -105,6 +114,10 @@ public class HTTPController {
         var status = RequestValidator.validateStatus(updateRequest.status());
 
         todoListService.update(uuid, name, description, dueDate, status);
+
+        // send activity feed
+        activityFeedsService.sendUpdateTodoItemActivity(name, status);
+
         return new UpdateResponse(uuid);
     }
 
@@ -120,7 +133,11 @@ public class HTTPController {
             throws Exception {
         var uuid = RequestValidator.validateUUID(deleteRequest.id());
 
-        todoListService.delete(uuid);
+        var item = todoListService.delete(uuid);
+
+        // send activity feed
+        activityFeedsService.sendDeleteTodoItemActivity(item.getName());
+
         return new DeleteResponse(uuid);
     }
 

@@ -12,7 +12,10 @@ COPY src ./src
 COPY public ./public
 COPY tsconfig.json .
 
+
 # Build the app
+ENV REACT_APP_BACKEND_URL=localhost 
+# RUN printenv > .env
 RUN npm run build
 
 EXPOSE 3000

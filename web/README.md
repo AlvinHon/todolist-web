@@ -52,15 +52,12 @@ sequenceDiagram
     participant User
     participant Server
     participant User 2
-    User 2->>Server: Websocket Subscribe topic "/feeds/create"
+    User 2->>Server: Websocket Subscribe topic "/topic/feeds-create"
     User->>Server: HTTP POST /create
+    Server-->>User 2: Websocket Send data to "/topic/feeds-create"
     Server-->>User: HTTP 200 { id: ... }
-    User->>Server: Websocket Publish data to "/activity/create"
-    Server-->>User 2: Websocket Send data to "/feeds/create"
 ```
 
 The web makes HTTP calls to backend server. The APIs reference can be found in [README.md](../server/README.md#http-apis).
 
-The web also connects the the backend server via a websocket. This is for sending and receiving real-time activity messages from other users.
-
-Please see [Design notes](../server/README.md#design-notes) for details.
+The web also connects the the backend server via a websocket. This is for delivering real-time activity messages from other users.

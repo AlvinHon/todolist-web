@@ -8,12 +8,10 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import TodoItemStatus from "../models/TodoItemStatus";
 import { Circle } from "@mui/icons-material";
-import { API, Feeds } from "../services/Api";
+import { API } from "../services/Api";
 import UpdateRequest from "../services/requests/UpdateRequest";
 import { useSnackbar } from "notistack";
-import { AppClientName } from "../App";
 import ExceptionResponse from "../services/responses/ExceptionResponse";
-import { getStompClient } from "../services/stomp/Client";
 
 
 export default function EditTodoItemForm(
@@ -27,8 +25,6 @@ export default function EditTodoItemForm(
     const [dueDate, setDueDate] = useState<Dayjs | null>(null);
     const [todoStatus, setTodoStatus] = useState(TodoItemStatus.NotStarted);
 
-    const stompClient = getStompClient();
-
     useEffect(() => {
         setName(editingItem.name);
         setDescription(editingItem.description ?? '');
@@ -41,7 +37,6 @@ export default function EditTodoItemForm(
         API.update(new UpdateRequest(args))
             .then(() => {
                 enqueueSnackbar("Saved at " + new Date().toLocaleTimeString(), { variant: 'success' });
-                stompClient?.publish(Feeds.Update.makeActivityMessage({ clientName: AppClientName, todoItemName: args.name, todoItemStatus: args.status }));
             })
             .catch((exceptionResponse: ExceptionResponse) => {
                 enqueueSnackbar("Fail to update. Error: " + exceptionResponse.error, { variant: 'error' });

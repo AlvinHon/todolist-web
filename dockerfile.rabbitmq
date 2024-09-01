@@ -1,0 +1,14 @@
+# RabbitMQ with Web STOMP plugin for testing.
+# Refence: https://github.com/stomp-js/stompjs/blob/develop/rabbitmq/Dockerfile
+
+FROM rabbitmq:3.8.8-alpine
+# FROM rabbitmq:3.8-management
+
+RUN rabbitmq-plugins enable --offline rabbitmq_web_stomp rabbitmq_management
+
+RUN \
+    echo 'loopback_users.guest = false' >> /etc/rabbitmq/rabbitmq.conf && \
+    echo 'web_stomp.ws_frame = binary' >> /etc/rabbitmq/rabbitmq.conf
+
+# Expose ports. Also expose 15672 if rabbitmq:3.8-management is used.
+EXPOSE 15674

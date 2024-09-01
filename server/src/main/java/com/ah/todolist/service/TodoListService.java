@@ -57,16 +57,17 @@ public class TodoListService {
         }
     }
 
-    public void delete(UUID id) throws IllegalStateException {
-        if (!todoListRepository.existsById(id)) {
-            throw new IllegalStateException("Item not found");
-        }
+    public TodoItem delete(UUID id) throws IllegalStateException {
+        TodoItem deleteItem = todoListRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Item not found"));
 
         try {
             todoListRepository.deleteById(id);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to delete item");
         }
+
+        return deleteItem;
     }
 
 }

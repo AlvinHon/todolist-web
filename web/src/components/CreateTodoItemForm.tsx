@@ -7,11 +7,9 @@ import { validStringOrUndefined } from "../utils/InputValidation";
 import { CreationArgs } from "../types/Types";
 import { useState } from "react";
 import { useSnackbar } from "notistack";
-import { API, Feeds } from "../services/Api";
-import { AppClientName } from "../App";
+import { API } from "../services/Api";
 import CreateRequest from "../services/requests/CreateRequest";
 import ExceptionResponse from "../services/responses/ExceptionResponse";
-import { getStompClient } from "../services/stomp/Client";
 
 export default function CreateTodoItemForm(
     { onCreated }: { onCreated: () => void }
@@ -23,14 +21,12 @@ export default function CreateTodoItemForm(
     const [isBtnDisabled, setIsBtnDisabled] = useState(false);
 
     const { enqueueSnackbar } = useSnackbar();
-    const stompClient = getStompClient();
 
     const createTodoItem = (args: CreationArgs) => {
         setIsBtnDisabled(true);
         API.create(new CreateRequest(args))
             .then(() => {
                 enqueueSnackbar("Created '" + args.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
-                stompClient?.publish(Feeds.Create.makeActivityMessage({ clientName: AppClientName, todoItemName: args.name }));
                 onCreated()
             })
             .catch((exceptionResponse: ExceptionResponse) => {
