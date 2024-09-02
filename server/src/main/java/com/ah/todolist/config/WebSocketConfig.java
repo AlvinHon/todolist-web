@@ -1,4 +1,4 @@
-package com.ah.todolist;
+package com.ah.todolist.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,7 +12,7 @@ import com.ah.todolist.stomp.AppStompClient;
 
 @Configuration
 @EnableWebSocketMessageBroker
-public class TodolistConfig implements WebSocketMessageBrokerConfigurer {
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Value("${spring.stompbroker.url}")
     private String stompBrokerUrl;
@@ -38,5 +38,4 @@ public class TodolistConfig implements WebSocketMessageBrokerConfigurer {
         // ws://localhost:8080/backend-ws
         registry.addEndpoint("/backend-ws").setAllowedOriginPatterns("*");
     }
-
 }

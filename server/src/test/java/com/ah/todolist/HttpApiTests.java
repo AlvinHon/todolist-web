@@ -2,8 +2,11 @@ package com.ah.todolist;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -12,6 +15,8 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.JsonPathResultMatchers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -20,13 +25,31 @@ import com.google.gson.JsonParser;
 @AutoConfigureMockMvc
 @TestPropertySource(locations = "classpath:tests.properties")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@WithMockUser(value = "mock user")
 class HttpApiTests {
 
 	@Autowired
+	private WebApplicationContext context;
+
 	private MockMvc mockMvc;
+
+	@BeforeEach
+	public void setup() {
+		mockMvc = MockMvcBuilders
+				.webAppContextSetup(context)
+				.apply(SecurityMockMvcConfigurers.springSecurity())
+				.build();
+	}
+
+	@Test
+	void testIndex() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.get("/index"))
+				.andExpect(MockMvcResultMatchers.status().isOk());
+	}
 
 	@Test
 	void testCreateFail() throws Exception {
+
 		var unixTimestampYesterday = System.currentTimeMillis() / 1000L - 86400;
 		String jsonContent = "{\"name\":\"test\",\"description\":\"test\",\"dueDate\":" + unixTimestampYesterday + "}";
 
