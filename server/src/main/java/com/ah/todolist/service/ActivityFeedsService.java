@@ -25,25 +25,25 @@ public class ActivityFeedsService {
     @Autowired
     private AppStompClient appStompClient;
 
-    public void sendCreateTodoItemActivity(String name) {
+    public void sendCreateTodoItemActivity(String clientName, String name) {
         try {
-            appStompClient.send("/topic/feeds-create", new CreateTodoItemActivity("", name));
+            appStompClient.send("/topic/feeds-create", new CreateTodoItemActivity(clientName, name));
         } catch (Exception e) {
             logger.severe(e.getMessage());
         }
     }
 
-    public void sendUpdateTodoItemActivity(String name, TodoItemStatus status) {
+    public void sendUpdateTodoItemActivity(String clientName, String name, TodoItemStatus status) {
         try {
-            appStompClient.send("/topic/feeds-update", new UpdateTodoItemActivity("", name, status));
+            appStompClient.send("/topic/feeds-update", new UpdateTodoItemActivity(clientName, name, status));
         } catch (Exception e) {
             logger.severe(e.getMessage());
         }
     }
 
-    public void sendDeleteTodoItemActivity(String name) {
+    public void sendDeleteTodoItemActivity(String clientName, String name) {
         try {
-            appStompClient.send("/topic/feeds-delete", new DeleteTodoItemActivity("", name));
+            appStompClient.send("/topic/feeds-delete", new DeleteTodoItemActivity(clientName, name));
         } catch (Exception e) {
             logger.severe(e.getMessage());
         }

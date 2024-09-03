@@ -1,6 +1,8 @@
 package com.ah.todolist.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,6 +13,7 @@ import com.ah.todolist.model.AuthUserDetails;
 import com.ah.todolist.model.User;
 import com.ah.todolist.repository.UserRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,11 +34,27 @@ public class AuthUserService implements UserDetailsService {
         return new AuthUserDetails(user);
     }
 
-    public UUID register(String username, String password) {
+    public UUID register(String username, String password) throws IllegalArgumentException {
+        if (userRepository.findByUsername(username) != null) {
+            throw new IllegalArgumentException("User already exists");
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        return userRepository.save(user).getId();
+        try {
+            return userRepository.save(user).getId();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Database error");
+        }
+    }
+
+    public Optional<String> currentAuthenticatedClientName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            return Optional.of(authentication.getName());
+        }
+        return Optional.empty();
     }
 
 }

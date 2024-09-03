@@ -11,6 +11,23 @@ import CreateTodoItemActivity from "./activities/CreateTodoItemActivity";
 import UpdateTodoItemActivity from "./activities/UpdateTodoItemActivity";
 import DeleteTodoItemActivity from "./activities/DeleteTodoItemActivity";
 
+function handleHttpResponse(response: Response): Promise<any> {
+    switch (response.status) {
+        case 400:
+            return response.json().then((json) => {
+                throw new ExceptionResponse(json)
+            })
+        case 401:
+            throw new ExceptionResponse({ error: "Unauthorized. Login might not be successful!" })
+        case 403:
+            throw new ExceptionResponse({ error: "Forbidden. Please login!" })
+        case 200:
+            return response.json()
+        default:
+            throw new Error("Unexpected response status: " + response.status)
+    }
+}
+
 class API {
     public static async create(request: CreateRequest): Promise<CreateResponse> {
         return API.post("create", JSON.stringify(request))
@@ -40,14 +57,41 @@ class API {
                 'Content-Type': 'application/json',
             },
             body
+        }).then(handleHttpResponse)
+    }
+}
+
+class Auth {
+    public static async login(username: string, password: string): Promise<void> {
+        var formData = new FormData();
+        formData.append("username", username);
+        formData.append("password", password);
+        return fetch("api/user/login", {
+            method: 'POST',
+            body: formData
         }).then((response) => {
             if (!response.ok) {
-                return response.json().then((json) => {
-                    throw new ExceptionResponse(json)
+                return response.text().then((error) => {
+                    throw new ExceptionResponse({ error })
                 })
             }
-            return response.json()
         })
+    }
+
+    public static async logout(): Promise<void> {
+        return fetch("api/user/logout", {
+            method: 'POST'
+        }).then(() => { })
+    }
+
+    public static async register(username: string, password: string): Promise<void> {
+        return fetch("api/user/register", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password })
+        }).then(handleHttpResponse)
     }
 }
 
@@ -88,4 +132,4 @@ namespace ActivityReceiver {
     }
 }
 
-export { API, Feeds, ActivityReceiver };
+export { API, Auth, Feeds, ActivityReceiver };

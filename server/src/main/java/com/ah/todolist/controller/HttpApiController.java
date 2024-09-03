@@ -20,6 +20,7 @@ import com.ah.todolist.dto.http.ReadResponse;
 import com.ah.todolist.dto.http.UpdateRequest;
 import com.ah.todolist.dto.http.UpdateResponse;
 import com.ah.todolist.service.ActivityFeedsService;
+import com.ah.todolist.service.AuthUserService;
 import com.ah.todolist.service.TodoListService;
 import com.ah.todolist.util.Converter;
 import com.ah.todolist.util.RequestValidator;
@@ -37,114 +38,123 @@ import jakarta.servlet.http.HttpServletResponse;
 @RestController
 public class HttpApiController {
 
-        @Autowired
-        private TodoListService todoListService;
+	@Autowired
+	private TodoListService todoListService;
 
-        @Autowired
-        private ActivityFeedsService activityFeedsService;
+	@Autowired
+	private AuthUserService authUserService;
 
-        // endpoint for testing server readiness.
-        @GetMapping("/index")
-        public String index() {
-                return "Todo List API Backend";
-        }
+	@Autowired
+	private ActivityFeedsService activityFeedsService;
 
-        @Operation(summary = "Create a new todo item")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "The todo item is created successfully."),
-                        @ApiResponse(responseCode = "400", description = "Failed to create the todo item.", content = {
-                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-                        })
-        })
-        @PostMapping("/create")
-        public CreateResponse handleCreateRequest(@RequestBody(required = true) CreateRequest createRequest)
-                        throws Exception {
-                var name = RequestValidator.validateName(createRequest.name());
-                var description = createRequest.description();
-                var dueDate = RequestValidator.validateDueDate(createRequest.dueDate());
+	// endpoint for testing server readiness.
+	@GetMapping("/index")
+	public String index() {
+		return "Todo List API Backend";
+	}
 
-                // create a new todo item
-                UUID uuid = todoListService.create(name, description, dueDate);
+	@Operation(summary = "Create a new todo item")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "The todo item is created successfully."),
+			@ApiResponse(responseCode = "400", description = "Failed to create the todo item.", content = {
+					@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+			})
+	})
+	@PostMapping("/create")
+	public CreateResponse handleCreateRequest(@RequestBody(required = true) CreateRequest createRequest)
+			throws Exception {
+		var name = RequestValidator.validateName(createRequest.name());
+		var description = createRequest.description();
+		var dueDate = RequestValidator.validateDueDate(createRequest.dueDate());
 
-                // send activity feed
-                activityFeedsService.sendCreateTodoItemActivity(name);
+		// create a new todo item
+		UUID uuid = todoListService.create(name, description, dueDate);
 
-                return new CreateResponse(uuid);
-        }
+		// send activity feed
+		authUserService.currentAuthenticatedClientName().ifPresent((clientName) -> {
+			activityFeedsService.sendCreateTodoItemActivity(clientName, name);
+		});
 
-        @Operation(summary = "Read todo items based on the given criteria")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "The todo items are read successfully."),
-                        @ApiResponse(responseCode = "400", description = "Failed to read the todo items.", content = {
-                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-                        })
-        })
-        @PostMapping("/read")
-        public ReadResponse handleReadRequest(@RequestBody(required = true) ReadRequest readRequest) throws Exception {
-                var pagingParams = RequestValidator.validatePaginationParams(readRequest.pagination());
-                var page = pagingParams.page();
-                var limit = pagingParams.limit();
-                var sort = RequestValidator.validateSortParams(readRequest.sort());
-                var filter = RequestValidator.validateFilterParams(readRequest.filter());
-                var status = filter.map(f -> f.byStatus()).orElse(null);
-                var dueDate = filter.map(f -> f.byDueDate()).map(Converter::timestampToDate).orElse(null);
+		return new CreateResponse(uuid);
+	}
 
-                var items = todoListService.read(status, dueDate, page, limit, sort)
-                                .stream()
-                                .map(ReadResponse.ReadTodoItem::from)
-                                .toList();
+	@Operation(summary = "Read todo items based on the given criteria")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "The todo items are read successfully."),
+			@ApiResponse(responseCode = "400", description = "Failed to read the todo items.", content = {
+					@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+			})
+	})
+	@PostMapping("/read")
+	public ReadResponse handleReadRequest(@RequestBody(required = true) ReadRequest readRequest) throws Exception {
+		var pagingParams = RequestValidator.validatePaginationParams(readRequest.pagination());
+		var page = pagingParams.page();
+		var limit = pagingParams.limit();
+		var sort = RequestValidator.validateSortParams(readRequest.sort());
+		var filter = RequestValidator.validateFilterParams(readRequest.filter());
+		var status = filter.map(f -> f.byStatus()).orElse(null);
+		var dueDate = filter.map(f -> f.byDueDate()).map(Converter::timestampToDate).orElse(null);
 
-                return new ReadResponse(items);
-        }
+		var items = todoListService.read(status, dueDate, page, limit, sort)
+				.stream()
+				.map(ReadResponse.ReadTodoItem::from)
+				.toList();
 
-        @Operation(summary = "Update a todo item")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "The todo item is updated successfully."),
-                        @ApiResponse(responseCode = "400", description = "Failed to update the todo item.", content = {
-                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-                        })
-        })
-        @PostMapping("/update")
-        public UpdateResponse handleUpdateRequest(@RequestBody(required = true) UpdateRequest updateRequest)
-                        throws Exception {
-                var uuid = RequestValidator.validateUUID(updateRequest.id());
-                var name = RequestValidator.validateName(updateRequest.name());
-                var description = updateRequest.description();
-                var dueDate = RequestValidator.validateDueDate(updateRequest.dueDate());
-                var status = RequestValidator.validateStatus(updateRequest.status());
+		return new ReadResponse(items);
+	}
 
-                todoListService.update(uuid, name, description, dueDate, status);
+	@Operation(summary = "Update a todo item")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "The todo item is updated successfully."),
+			@ApiResponse(responseCode = "400", description = "Failed to update the todo item.", content = {
+					@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+			})
+	})
+	@PostMapping("/update")
+	public UpdateResponse handleUpdateRequest(@RequestBody(required = true) UpdateRequest updateRequest)
+			throws Exception {
+		var uuid = RequestValidator.validateUUID(updateRequest.id());
+		var name = RequestValidator.validateName(updateRequest.name());
+		var description = updateRequest.description();
+		var dueDate = RequestValidator.validateDueDate(updateRequest.dueDate());
+		var status = RequestValidator.validateStatus(updateRequest.status());
 
-                // send activity feed
-                activityFeedsService.sendUpdateTodoItemActivity(name, status);
+		todoListService.update(uuid, name, description, dueDate, status);
 
-                return new UpdateResponse(uuid);
-        }
+		// send activity feed
+		authUserService.currentAuthenticatedClientName().ifPresent((clientName) -> {
+			activityFeedsService.sendUpdateTodoItemActivity(clientName, name, status);
+		});
 
-        @Operation(summary = "Delete a todo item")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "The todo item is deleted successfully."),
-                        @ApiResponse(responseCode = "400", description = "Failed to delete the todo item.", content = {
-                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
-                        })
-        })
-        @PostMapping("/delete")
-        public DeleteResponse handleDeleteRequest(@RequestBody(required = true) DeleteRequest deleteRequest)
-                        throws Exception {
-                var uuid = RequestValidator.validateUUID(deleteRequest.id());
+		return new UpdateResponse(uuid);
+	}
 
-                var item = todoListService.delete(uuid);
+	@Operation(summary = "Delete a todo item")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "The todo item is deleted successfully."),
+			@ApiResponse(responseCode = "400", description = "Failed to delete the todo item.", content = {
+					@Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))
+			})
+	})
+	@PostMapping("/delete")
+	public DeleteResponse handleDeleteRequest(@RequestBody(required = true) DeleteRequest deleteRequest)
+			throws Exception {
+		var uuid = RequestValidator.validateUUID(deleteRequest.id());
 
-                // send activity feed
-                activityFeedsService.sendDeleteTodoItemActivity(item.getName());
+		var item = todoListService.delete(uuid);
 
-                return new DeleteResponse(uuid);
-        }
+		// send activity feed
+		authUserService.currentAuthenticatedClientName().ifPresent((clientName) -> {
+			activityFeedsService.sendDeleteTodoItemActivity(clientName, item.getName());
+		});
 
-        @ExceptionHandler({ Exception.class })
-        public ExceptionResponse handleException(Exception ex, HttpServletResponse response) {
-                response.setStatus(HttpStatus.BAD_REQUEST.value());
-                return new ExceptionResponse(ex.getMessage());
-        }
+		return new DeleteResponse(uuid);
+	}
+
+	@ExceptionHandler({ Exception.class })
+	public ExceptionResponse handleException(Exception ex, HttpServletResponse response) {
+		response.setStatus(HttpStatus.BAD_REQUEST.value());
+		return new ExceptionResponse(ex.getMessage());
+	}
 
 }

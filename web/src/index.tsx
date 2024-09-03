@@ -3,6 +3,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { SnackbarProvider } from 'notistack';
+import { AccountProvider } from './context/AccountContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -11,9 +12,11 @@ const root = ReactDOM.createRoot(
 
 root.render(
   // <React.StrictMode>
-  <SnackbarProvider maxSnack={5}>
-    <App />
-  </SnackbarProvider>
+  <AccountProvider >
+    <SnackbarProvider maxSnack={5}>
+      <App />
+    </SnackbarProvider>
+  </AccountProvider>
   // </React.StrictMode>
 );
 

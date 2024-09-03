@@ -13,16 +13,13 @@ import FilterParams from './services/params/FilterParams';
 import EditTodoItemMenuBar from './components/EditTodoItemMenuBar';
 import EditTodoItemForm from './components/EditTodoItemForm';
 import { useSnackbar } from 'notistack';
-// import { useSubscription } from 'react-stomp-hooks';
-import { randomString } from './utils/Random';
 import { getStompClient, initStompClient } from './services/stomp/Client';
 import CreateTodoItemActivity from './services/activities/CreateTodoItemActivity';
 import UpdateTodoItemActivity from './services/activities/UpdateTodoItemActivity';
 import DeleteTodoItemActivity from './services/activities/DeleteTodoItemActivity';
 import ExceptionResponse from './services/responses/ExceptionResponse';
-
-// This is a random string to identify the client. It is used to filter out the client's own activities.
-export const AppClientName = randomString(10);
+import { shorterString } from './utils/StringUtil';
+import { useAccount } from './context/AccountContext';
 
 const darkTheme = createTheme({
   palette: {
@@ -48,11 +45,16 @@ function App() {
 
   const { enqueueSnackbar } = useSnackbar();
 
+  const { username, loadFromCookie } = useAccount();
+
+  useEffect(() => {
+    loadFromCookie();
+  }, [loadFromCookie]);
+
   // Setup the Stomp Client to subscribe to the feeds
   const activityReceiver = useRef<ActivityReceiver>(ActivityReceiver.empty);
   useEffect(() => {
     initStompClient(() => {
-
       const stompClient = getStompClient();
 
       stompClient?.subscribe(Feeds.Create.subPath, (message) => {
@@ -76,21 +78,27 @@ function App() {
   useEffect(() => {
     const showMessage = (clientName: string, message: string) => {
       // show only if current page is in list mode and the activity is not from the client itself
-      if (mode !== AppMode.LIST || clientName === AppClientName) return;
+      if (mode !== AppMode.LIST || clientName === username) return;
       enqueueSnackbar(message);
     }
     activityReceiver.current = {
       onReceiveCreateActivity: (activity: CreateTodoItemActivity) => {
-        showMessage(activity.clientName, "Someone creates a new TODO item named '" + activity.todoItemName + "'");
+        const userName = shorterString(activity.clientName, 10);
+        const todoItemName = shorterString(activity.todoItemName, 10);
+        showMessage(activity.clientName, "User '" + userName + "' creates a new TODO item named '" + todoItemName + "'");
       },
       onReceiveUpdateActivity: (activity: UpdateTodoItemActivity) => {
-        showMessage(activity.clientName, "Someone updates the TODO item named '" + activity.todoItemName + "'");
+        const userName = shorterString(activity.clientName, 10);
+        const todoItemName = shorterString(activity.todoItemName, 10);
+        showMessage(activity.clientName, "User '" + userName + "' updates the TODO item named '" + todoItemName + "' status=" + activity.todoItemStatus);
       },
       onReceiveDeleteActivity: (activity: DeleteTodoItemActivity) => {
-        showMessage(activity.clientName, "Someone deletes a TODO item named '" + activity.todoItemName + "'");
+        const userName = shorterString(activity.clientName, 10);
+        const todoItemName = shorterString(activity.todoItemName, 10);
+        showMessage(activity.clientName, "User '" + userName + "' deletes a TODO item named '" + todoItemName + "'");
       }
     };
-  }, [mode, enqueueSnackbar])
+  }, [mode, username, enqueueSnackbar])
 
   // Refresh the todo items and set the mode to LIST
   const refreshTodoItems = useCallback(() => {
@@ -106,7 +114,7 @@ function App() {
       .finally(() => setIsLoading(false));
   }, [refreshRequest, enqueueSnackbar]);
 
-  // Refresh the todo items when the mode is in INIT or LIST
+  // Refresh the todo items when the mode is INIT or LIST
   useEffect(() => {
     if (mode !== AppMode.INIT && mode !== AppMode.LIST) return;
     refreshTodoItems();

@@ -4,6 +4,7 @@ import ClickableIconButton from "./ClickableIconButton"
 import { ArrowBack, Delete } from "@mui/icons-material"
 import { useSnackbar } from "notistack"
 import { API } from "../services/Api"
+import ExceptionResponse from "../services/responses/ExceptionResponse"
 
 
 export default function EditTodoItemMenuBar(
@@ -19,7 +20,10 @@ export default function EditTodoItemMenuBar(
             .then(() => {
                 enqueueSnackbar("Deleted '" + editingItem.name + "' at " + new Date().toLocaleTimeString(), { variant: 'success' });
                 onClickBack();
-            });
+            })
+            .catch((exceptionResponse: ExceptionResponse) => {
+                enqueueSnackbar("Fail to delete. Error: " + exceptionResponse.error, { variant: 'error' });
+            })
     }
 
     return (

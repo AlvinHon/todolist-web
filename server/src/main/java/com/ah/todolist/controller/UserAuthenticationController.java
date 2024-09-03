@@ -12,6 +12,7 @@ import com.ah.todolist.dto.auth.RegistrationRequest;
 import com.ah.todolist.dto.auth.RegistrationResponse;
 import com.ah.todolist.dto.http.ExceptionResponse;
 import com.ah.todolist.service.AuthUserService;
+import com.ah.todolist.util.RequestValidator;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -24,7 +25,9 @@ public class UserAuthenticationController {
 
     @PostMapping("/register")
     public RegistrationResponse register(@RequestBody RegistrationRequest regRequest) throws Exception {
-        var uuid = authUserService.register(regRequest.username(), regRequest.password());
+        var username = RequestValidator.validateUsername(regRequest.username());
+        var password = RequestValidator.validatePassword(regRequest.password());
+        var uuid = authUserService.register(username, password);
         return new RegistrationResponse(uuid);
     }
 

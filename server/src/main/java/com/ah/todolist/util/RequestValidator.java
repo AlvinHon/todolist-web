@@ -14,6 +14,16 @@ import com.ah.todolist.model.TodoItemStatus;
 
 public class RequestValidator {
 
+    public static String validateUsername(String username) throws IllegalArgumentException {
+        return validateStringInput(username,
+                "Username is too short");
+    }
+
+    public static String validatePassword(String password) throws IllegalArgumentException {
+        return validateStringInput(password,
+                "Password is too short");
+    }
+
     public static String validateName(String name) throws IllegalArgumentException {
         return validateStringInput(name,
                 "Name is too short");

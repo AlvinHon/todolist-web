@@ -81,8 +81,7 @@ public class UserAuthenticationTests {
         // Login with the new user
         mockMvc.perform(SecurityMockMvcRequestBuilders.formLogin("/user/login")
                 .user("test").password("test"))
-                .andExpect(MockMvcResultMatchers.status().isFound())
-                .andExpect(MockMvcResultMatchers.redirectedUrl("/"));
+                .andExpect(MockMvcResultMatchers.status().isOk());
 
         // Access a protected endpoint
         var unixTimestampTomorrow = System.currentTimeMillis() / 1000L + 86400;
@@ -91,5 +90,15 @@ public class UserAuthenticationTests {
                 .contentType("application/json")
                 .content(jsonContent))
                 .andExpect(MockMvcResultMatchers.status().isOk());
+
+        // Logout
+        mockMvc.perform(SecurityMockMvcRequestBuilders.logout("/user/logout"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        // Access the protected endpoint again
+        mockMvc.perform(MockMvcRequestBuilders.post("/create")
+                .contentType("application/json")
+                .content(jsonContent))
+                .andExpect(MockMvcResultMatchers.status().isForbidden());
     }
 }

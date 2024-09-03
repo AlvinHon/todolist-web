@@ -1,4 +1,4 @@
-import { Add, Info, PageviewOutlined, Refresh, Sort } from "@mui/icons-material";
+import { AccountCircle, Add, Info, PageviewOutlined, Refresh, Sort } from "@mui/icons-material";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { ReactComponent as Logo } from '../logo.svg';
 
@@ -9,6 +9,8 @@ import { FilterArgs, SortByArgs } from "../types/Types";
 import SortByModal from "./SortByModal";
 import ShowPageModal from "./ShowPageModal";
 import ClickableIconButton from "./ClickableIconButton";
+import AccountModal from "./AccountModal";
+import { useAccount } from "../context/AccountContext";
 
 export default function MenuBar(
     { onCreated, onSelectSortBy, onSelectShowPage, onClickRefresh }: {
@@ -18,15 +20,21 @@ export default function MenuBar(
         onClickRefresh: () => void
     }
 ) {
+    const { username } = useAccount();
     const [openInfo, setOpenInfo] = useState(false);
     const [openCreate, setOpenCreate] = useState(false);
     const [openSortBy, setOpenSortBy] = useState(false);
     const [openShowPage, setOpenShowPage] = useState(false);
+    const [openAccount, setOpenAccount] = useState(false);
 
     return (
         <AppBar data-testid="menu-bar" position="static">
             <Toolbar>
-                <Logo />
+
+                <ClickableIconButton onClickAction={() => setOpenAccount(true)}>
+                    {(username) ? <Logo /> : <AccountCircle />}
+                </ClickableIconButton>
+
                 <Typography variant="h5" component="p" >
                     Todo List
                 </Typography>
@@ -53,6 +61,11 @@ export default function MenuBar(
                     <Info />
                 </ClickableIconButton>
             </Toolbar>
+
+            <AccountModal
+                open={openAccount}
+                setOpen={setOpenAccount}
+            />
 
             <InfoModal
                 open={openInfo}

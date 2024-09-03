@@ -32,18 +32,35 @@ public class WebSecurityConfig {
             authorize.anyRequest().authenticated();
         })
                 .exceptionHandling((customizer) -> {
-                    customizer.authenticationEntryPoint((request, response, authException) -> {
+                    customizer.authenticationEntryPoint((request, response, exception) -> {
                         response.setStatus(HttpStatus.FORBIDDEN.value());
+                        response.setContentType("text/plain");
+                        response.getOutputStream().write(exception.getMessage().getBytes());
+                        response.flushBuffer();
                     });
                 })
                 .formLogin((formLogin) -> formLogin
                         .loginPage("/user/login")
                         .usernameParameter("username")
                         .passwordParameter("password")
+                        .successHandler((request, response, authentication) -> {
+                            response.setStatus(HttpStatus.OK.value());
+                        })
                         .failureHandler((request, response, exception) -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType("text/plain");
+                            response.getOutputStream().write("Invalid Credential".getBytes());
+                            response.flushBuffer();
                         })
                         .permitAll())
+                .logout((customizer) -> {
+                    customizer.logoutUrl("/user/logout");
+                    customizer.logoutSuccessHandler((request, response, authentication) -> {
+                        response.setStatus(HttpStatus.OK.value());
+                    });
+                    customizer.invalidateHttpSession(true);
+                    customizer.deleteCookies("JSESSIONID");
+                })
                 .csrf(CsrfConfigurer::disable)
                 .build();
     }
@@ -63,4 +80,5 @@ public class WebSecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }
