@@ -11,7 +11,6 @@ import com.ah.todolist.dto.wsmessage.UpdateTodoItemActivity;
 import com.ah.todolist.model.TodoItemStatus;
 import com.ah.todolist.stomp.AppStompClient;
 
-// TODO implement account system so that the clientName can be used to identify the user
 /**
  * Service class for sending activity feeds to the stomp websocket brokers.
  * The send methods must not throw exceptions to prevent data inconsistency
